@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["identity", "core", "crm", "catalog", "sales", "integrations"]
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+  @@schema("identity")
+}
+
+model BusinessUnit {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customers Customer[]
+  products  Product[]
+  orders    SalesOrder[]
+
+  @@map("business_units")
+  @@schema("core")
+}
+
+model Customer {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessUnitId String   @map("business_unit_id") @db.Uuid
+  displayName    String   @map("display_name")
+  email          String?
+  phone          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  orders       SalesOrder[]
+
+  @@index([businessUnitId])
+  @@index([email])
+  @@index([phone])
+  @@map("customers")
+  @@schema("crm")
+}
+
+model Product {
+  id             String   @id @default(uuid()) @db.Uuid
+  businessUnitId String   @map("business_unit_id") @db.Uuid
+  sku            String   @unique
+  name           String
+  description    String?
+  unit           String   @default("pcs")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  orderItems   SalesOrderItem[]
+
+  @@index([businessUnitId])
+  @@map("products")
+  @@schema("catalog")
+}
+
+model SalesOrder {
+  id             String   @id @default(uuid()) @db.Uuid
+  orderNumber    String   @unique @map("order_number")
+  businessUnitId String   @map("business_unit_id") @db.Uuid
+  customerId     String?  @map("customer_id") @db.Uuid
+  source         String   @default("POS")
+  status         String   @default("DRAFT")
+  currency       String   @default("IDR") @db.VarChar(3)
+  subtotal       Decimal  @default(0) @db.Decimal(18, 2)
+  discountTotal  Decimal  @default(0) @map("discount_total") @db.Decimal(18, 2)
+  grandTotal     Decimal  @default(0) @map("grand_total") @db.Decimal(18, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  businessUnit BusinessUnit   @relation(fields: [businessUnitId], references: [id])
+  customer     Customer?      @relation(fields: [customerId], references: [id])
+  items        SalesOrderItem[]
+  payments     Payment[]
+
+  @@index([businessUnitId, createdAt])
+  @@index([customerId])
+  @@map("sales_orders")
+  @@schema("sales")
+}
+
+model SalesOrderItem {
+  id           String  @id @default(uuid()) @db.Uuid
+  salesOrderId String  @map("sales_order_id") @db.Uuid
+  productId    String  @map("product_id") @db.Uuid
+  description  String
+  quantity     Decimal @db.Decimal(18, 4)
+  unitPrice    Decimal @map("unit_price") @db.Decimal(18, 2)
+  lineTotal    Decimal @map("line_total") @db.Decimal(18, 2)
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@index([salesOrderId])
+  @@index([productId])
+  @@map("sales_order_items")
+  @@schema("sales")
+}
+
+model Payment {
+  id           String   @id @default(uuid()) @db.Uuid
+  salesOrderId String   @map("sales_order_id") @db.Uuid
+  provider     String   @default("MANUAL")
+  providerRef  String?  @unique @map("provider_ref")
+  amount       Decimal  @db.Decimal(18, 2)
+  currency     String   @default("IDR") @db.VarChar(3)
+  status       String   @default("PENDING")
+  receivedAt   DateTime? @map("received_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id])
+
+  @@index([salesOrderId, status])
+  @@map("payments")
+  @@schema("sales")
+}
+
+model OutboxEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  eventType     String   @map("event_type")
+  aggregateType String   @map("aggregate_type")
+  aggregateId   String   @map("aggregate_id")
+  payload       Json
+  occurredAt    DateTime @default(now()) @map("occurred_at")
+  publishedAt   DateTime? @map("published_at")
+  attempts      Int      @default(0)
+
+  @@index([publishedAt, occurredAt])
+  @@map("outbox_events")
+  @@schema("integrations")
+}
