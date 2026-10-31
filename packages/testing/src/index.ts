@@ -1,0 +1,1 @@
+export const TESTING_FOUNDATION_VERSION = "0.1.0";
