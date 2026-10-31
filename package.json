@@ -18,7 +18,8 @@
     "clean": "turbo clean",
     "db:generate": "pnpm --filter @repo/database db:generate",
     "db:migrate:dev": "pnpm --filter @repo/database db:migrate:dev",
-    "db:migrate:deploy": "pnpm --filter @repo/database db:migrate:deploy"
+    "db:migrate:deploy": "pnpm --filter @repo/database db:migrate:deploy",
+    "db:validate": "pnpm --filter @repo/database db:validate"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
