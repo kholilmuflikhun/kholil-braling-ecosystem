@@ -31,7 +31,7 @@ jobs:
       - name: Generate migration SQL from empty database
         run: |
           mkdir -p prisma/migrations/20261031140000_init
-          pnpm exec prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --config prisma.config.ts > prisma/migrations/20261031140000_init/migration.sql
+          pnpm exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --config prisma.config.ts > prisma/migrations/20261031140000_init/migration.sql
           test -s prisma/migrations/20261031140000_init/migration.sql
           printf 'provider = "postgresql"\n' > prisma/migrations/migration_lock.toml
       - name: Commit generated migration
