@@ -1,0 +1,3 @@
+import type { NextConfig } from "next";
+const nextConfig: NextConfig = { transpilePackages: ["@repo/ui", "@repo/design-system"] };
+export default nextConfig;
