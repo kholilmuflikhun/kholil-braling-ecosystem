@@ -22,6 +22,8 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --no-frozen-lockfile # Bootstrap only; commit pnpm-lock.yaml before production release
+      - name: Generate Prisma Client
+        run: pnpm db:generate
       - name: Typecheck
         run: pnpm typecheck
       - name: Lint
