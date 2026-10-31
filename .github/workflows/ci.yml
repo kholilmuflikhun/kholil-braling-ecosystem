@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          # Enable pnpm cache after pnpm-lock.yaml is committed.
       - name: Install
         run: pnpm install --no-frozen-lockfile # Bootstrap only; commit pnpm-lock.yaml before production release
       - name: Generate Prisma Client
