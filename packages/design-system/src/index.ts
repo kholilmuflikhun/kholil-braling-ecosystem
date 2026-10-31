@@ -1,0 +1,1 @@
+export const designTokens = { colors: { brand: { blue: "#173B65", orange: "#F97316" }, neutral: { white: "#FFFFFF", gray: "#64748B", black: "#0F172A" } }, radius: { card: "1rem", control: "0.75rem" } } as const;
